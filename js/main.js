@@ -1,117 +1,154 @@
- import * as THREE from "./three.module.js";
-      import { OrbitControls } from "./OrbitControls.js";
-      import { GLTFLoader } from "./GLTFLoader.js";
-      import { RGBELoader } from "./RGBELoader.js";
+import * as THREE from "./three.module.js";
+import { OrbitControls } from "./OrbitControls.js";
+import { GLTFLoader } from "./GLTFLoader.js";
+import { RGBELoader } from "./RGBELoader.js";
 
-      let camera, scene, renderer, loader, coche;
-      let botonRojo;
-      let botonAzul;
-      let botonInfo;
-      let divInfo;
+let camera, scene, renderer, loader, coche
+let rim=[];
+let  tire=[];
+let cargarCocheButton;
+let colorButton;
+let cargarRuedaButton;
+let colorSelector;
+let nombreTire, nombreRim;
+let selectTire, selectRim;
+let width = 1200;
+let height = 800;
+setUI();
+setBackground();
+setCanvas();
+setScene();
+setControls();
+render();
+function setUI() {
+  cargarCocheButton = document.getElementById("cargarCocheButton");
+  colorSelector = document.getElementById("colorSelector");
+  colorButton = document.getElementById("colorButton");
+  cargarRuedaButton = document.getElementById("cargarRuedaButton");
+  selectTire = document.getElementById("tire");
+  selectRim = document.getElementById("rim");
+  cargarCocheButton.addEventListener("click", () => {
+    loadCar("car.glb");
 
-      setUI();
-      setBackground();
-      setCanvas();
-      setScene();
-      setControls();
+  });
+  cargarRuedaButton.addEventListener("click", () => {
+    scene.remove(tire[0]);
+    scene.remove(tire[1]);
+    scene.remove(tire[2]);
+    scene.remove(tire[3]);
+    tire.pop();
+    tire.pop();
+    tire.pop();
+    tire.pop();
+    nombreRim = selectRim.value + ".glb";
+    nombreTire = selectTire.value + ".glb";
+    loadWheel(nombreTire, coche.children[2].position);
+    loadWheel(nombreRim, coche.children[2].position);
+    loadWheel(nombreTire, coche.children[1].position);
+    loadWheel(nombreRim, coche.children[1].position);
+  });
+  colorButton.addEventListener("click", () => {
+    changeColor();
+    console.log(scene);
+  });
+}
+function changeColor() {
+  let color = new THREE.Color(colorSelector.value);
+  coche.children[4].children[1].material.color = color;
+  render();
+}
+
+function loadWheel(nombreFichero, position) {
+  if (loader == null) {
+    loader = new GLTFLoader();
+  }
+  loader.setPath("models/");
+  loader.load(
+    nombreFichero,
+    function (gltf) {
+      gltf.scene.name = "wheel";
+      tire.push(gltf.scene);
+      scene.add(gltf.scene);
+      gltf.scene.position.x = position.x;
+      gltf.scene.position.y = position.y;
+      gltf.scene.position.z = position.z;
       render();
-      function setUI() {
-        botonRojo = document.getElementById("rojo");
-        botonAzul = document.getElementById("azul");
-        botonInfo = document.getElementById("botonInfo");
-        divInfo = document.getElementById("info");
-        botonInfo.addEventListener("click", () => {
-          console.log(coche);
-        });
+    },
+    function (xhr) {
+      console.log(
+        "Cargando modelo: " + (xhr.loaded / xhr.total) * 100 + "% loaded"
+      );
+    }
+  );
+}
+function loadCar(nombreFichero) {
+  if (loader == null) {
+    loader = new GLTFLoader();
+  }
+  loader.setPath("models/");
+  loader.load(
+    nombreFichero,
+    function (gltf) {
 
-        botonAzul.addEventListener("click", () => {
-          scene.children.pop();
-          loadCar("coche.glb");
-        });
-        botonRojo.addEventListener("click", () => {
-          scene.children.pop();
-          loadCar("coche_rojo.glb");
-        });
-      }
-      function getInfo() {
-        divInfo.innerHTML = "";
-        let nombre = document.createElement("h1");
-        nombre.textContent = coche.name;
-        divInfo.appendChild(nombre);
-        coche.children.map((parteCoche) => {
-          let pieza = document.createElement("p");
-          pieza.textContent = parteCoche.name;
-          divInfo.appendChild(pieza);
-        });
-      }
-      function loadCar(nombreFichero) {
-        if (loader == null) {
-          loader = new GLTFLoader();
-        }
-        loader.setPath("models/");
-        loader.load(
-          nombreFichero,
-          function (gltf) {
-            gltf.scene.name = nombreFichero;
-            coche = gltf.scene;
-            scene.add(gltf.scene);
-            getInfo();
+      gltf.scene.name = nombreFichero;
+      coche = gltf.scene;
+      scene.add(gltf.scene);
+      render();
 
-            render();
-          },
-          function (xhr) {
-            console.log(
-              "Cargando modelo: " + (xhr.loaded / xhr.total) * 100 + "% loaded"
-            );
-          }
-        );
-      }
-      function setScene() {
-        camera = new THREE.PerspectiveCamera(50, 600 / 320, 0.25, 20);
-        camera.position.set(4, 0, 3);
-        scene = new THREE.Scene();
-      }
-      function setCanvas() {
-        let canvasDiv = document.getElementById("car3D");
+    },
+    function (xhr) {
+      console.log(
+        "Cargando modelo: " + (xhr.loaded / xhr.total) * 100 + "% loaded"
+      );
+    }
+  );
+}
+function setScene() {
+  camera = new THREE.PerspectiveCamera(50, width / height, 0.25, 40);
+  camera.position.set(40, 0, 3);
+  scene = new THREE.Scene();
+}
+function setCanvas() {
+  let canvasDiv = document.getElementById("car3D");
 
-        renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setPixelRatio(600 / 320);
-        renderer.setSize(600, 320);
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1;
-        renderer.outputEncoding = THREE.sRGBEncoding;
-        canvasDiv.appendChild(renderer.domElement);
-        window.addEventListener("resize", onWindowResize);
-      }
-      function setControls() {
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.addEventListener("change", render); // use if there is no animation loop
-        controls.minDistance = 2;
-        controls.maxDistance = 10;
-        controls.target.set(0, 0, -0.2);
-        controls.update();
-      }
-      function onWindowResize() {
-        camera.aspect = 600 / 320;
-        camera.updateProjectionMatrix();
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(width / height);
+  renderer.setSize(width, height);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  canvasDiv.appendChild(renderer.domElement);
+  window.addEventListener("resize", onWindowResize);
+}
+function setControls() {
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.addEventListener("change", render); // use if there is no animation loop
+  controls.minDistance = 2;
+  controls.maxDistance = 15;
+  controls.target.set(0, 0, -0.2);
+  controls.update();
+}
+function onWindowResize() {
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
 
-        renderer.setSize(600, 320);
+  renderer.setSize(width, height);
 
-        render();
-      }
+  render();
+}
 
-      function render() {
-        renderer.render(scene, camera);
-      }
+function render() {
+  renderer.render(scene, camera);
+}
 
-      function setBackground() {
-        let RGBE = new RGBELoader()
-          .setPath("textures/")
-          .load("royal_esplanade_1k.hdr", function (texture) {
-            texture.mapping = THREE.EquirectangularReflectionMapping;
+function setBackground() {
+  let RGBE = new RGBELoader()
+    .setPath("textures/")
+    .load("royal_esplanade_1k.hdr", function (texture) {
+      texture.mapping = THREE.EquirectangularReflectionMapping;
 
-            scene.background = texture;
-            scene.environment = texture;
-            render();
-          });
-      }
+      scene.background = texture;
+      scene.environment = texture;
+      render();
+    });
+}
