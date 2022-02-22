@@ -4,9 +4,7 @@ import { GLTFLoader } from "./GLTFLoader.js";
 import { RGBELoader } from "./RGBELoader.js";
 
 let camera, scene, renderer, loader, coche
-let rim=[];
-let  tire=[];
-let cargarCocheButton;
+let wheel = [];
 let colorButton;
 let cargarRuedaButton;
 let colorSelector;
@@ -19,45 +17,20 @@ setBackground();
 setCanvas();
 setScene();
 setControls();
+init();
 render();
-function setUI() {
-  cargarCocheButton = document.getElementById("cargarCocheButton");
-  colorSelector = document.getElementById("colorSelector");
-  colorButton = document.getElementById("colorButton");
-  cargarRuedaButton = document.getElementById("cargarRuedaButton");
-  selectTire = document.getElementById("tire");
-  selectRim = document.getElementById("rim");
-  cargarCocheButton.addEventListener("click", () => {
-    loadCar("car.glb");
-
-  });
-  cargarRuedaButton.addEventListener("click", () => {
-    scene.remove(tire[0]);
-    scene.remove(tire[1]);
-    scene.remove(tire[2]);
-    scene.remove(tire[3]);
-    tire.pop();
-    tire.pop();
-    tire.pop();
-    tire.pop();
-    nombreRim = selectRim.value + ".glb";
-    nombreTire = selectTire.value + ".glb";
-    loadWheel(nombreTire, coche.children[2].position);
-    loadWheel(nombreRim, coche.children[2].position);
-    loadWheel(nombreTire, coche.children[1].position);
-    loadWheel(nombreRim, coche.children[1].position);
-  });
-  colorButton.addEventListener("click", () => {
-    changeColor();
-    console.log(scene);
-  });
-}
-function changeColor() {
-  let color = new THREE.Color(colorSelector.value);
-  coche.children[4].children[1].material.color = color;
-  render();
+function init() {
+  loadCar("car.glb");
 }
 
+
+function unloadWheel(){
+  scene.remove(wheel[0]);
+  scene.remove(wheel[1]);
+  scene.remove(wheel[2]);
+  scene.remove(wheel[3]);
+  wheel.pop();wheel.pop();wheel.pop();wheel.pop();
+}
 function loadWheel(nombreFichero, position) {
   if (loader == null) {
     loader = new GLTFLoader();
@@ -67,8 +40,9 @@ function loadWheel(nombreFichero, position) {
     nombreFichero,
     function (gltf) {
       gltf.scene.name = "wheel";
-      tire.push(gltf.scene);
+      wheel.push(gltf.scene);
       scene.add(gltf.scene);
+      console.log(gltf.scene.position);
       gltf.scene.position.x = position.x;
       gltf.scene.position.y = position.y;
       gltf.scene.position.z = position.z;
@@ -94,7 +68,10 @@ function loadCar(nombreFichero) {
       coche = gltf.scene;
       scene.add(gltf.scene);
       render();
-
+      loadWheel("tire1.glb", coche.children[2].position);
+      loadWheel("rim1.glb", coche.children[2].position);
+      loadWheel("rim1.glb", coche.children[1].position);
+      loadWheel("tire1.glb", coche.children[1].position);
     },
     function (xhr) {
       console.log(
@@ -103,6 +80,45 @@ function loadCar(nombreFichero) {
     }
   );
 }
+
+
+
+function changeColor() {
+  let color = new THREE.Color(colorSelector.value);
+  coche.children[4].children[1].material.color = color;
+  render();
+}
+function setUI() {
+  colorSelector = document.getElementById("colorSelector");
+  colorButton = document.getElementById("colorButton");
+  cargarRuedaButton = document.getElementById("cargarRuedaButton");
+  selectTire = document.getElementById("tire");
+  selectRim = document.getElementById("rim");
+
+  selectRim.addEventListener("change", () => {
+    unloadWheel();
+    nombreRim = selectRim.value + ".glb";
+    nombreTire = selectTire.value + ".glb";
+    loadWheel(nombreTire, coche.children[2].position);
+    loadWheel(nombreRim, coche.children[2].position);
+    loadWheel(nombreTire, coche.children[1].position);
+    loadWheel(nombreRim, coche.children[1].position);
+  });
+  selectTire.addEventListener("change", () => {
+    unloadWheel();
+    nombreRim = selectRim.value + ".glb";
+    nombreTire = selectTire.value + ".glb";
+    loadWheel(nombreTire, coche.children[2].position);
+    loadWheel(nombreRim, coche.children[2].position);
+    loadWheel(nombreTire, coche.children[1].position);
+    loadWheel(nombreRim, coche.children[1].position);
+  });
+  colorButton.addEventListener("click", () => {
+    changeColor();
+    console.log(scene);
+  });
+}
+
 function setScene() {
   camera = new THREE.PerspectiveCamera(50, width / height, 0.25, 40);
   camera.position.set(40, 0, 3);
